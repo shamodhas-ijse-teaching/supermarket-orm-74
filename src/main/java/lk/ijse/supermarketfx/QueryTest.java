@@ -5,6 +5,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import lk.ijse.supermarketfx.config.FactoryConfiguration;
 import lk.ijse.supermarketfx.entity.Customer;
+import lk.ijse.supermarketfx.entity.Order;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
@@ -67,23 +68,38 @@ public class QueryTest {
 //        System.out.println("========== HQL / JPQL ==========");
 //        customerList.forEach(customer -> System.out.println(customer.toString()));
 
-        Session session = FactoryConfiguration.getInstance().getSession();
+//        Session session = FactoryConfiguration.getInstance().getSession();
 
         // Criteria API
 
-        // 1. create CriteriaBuilder object
-        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        // 2. create CriteriaQuery object, Define what entity class // select *
-        CriteriaQuery<Customer> query = criteriaBuilder.createQuery(Customer.class);
-        // 3. Setup root entity from Customer
-        Root<Customer> from = query.from(Customer.class);
-        // from Customer where name = 'John Doe'
-        query.select(from).where(
-                criteriaBuilder.equal(from.get("name"), "John Doe")
-        );
-        Query<Customer> customerQuery = session.createQuery(query);
-        List<Customer> customerList = customerQuery.list();
-        customerList.forEach(customer -> System.out.println(customer.toString()));
+//        // 1. create CriteriaBuilder object
+//        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+//        // 2. create CriteriaQuery object, Define what entity class // select *
+//        CriteriaQuery<Customer> query = criteriaBuilder.createQuery(Customer.class);
+//        // 3. Setup root entity from Customer
+//        Root<Customer> from = query.from(Customer.class);
+//        // from Customer where name = 'John Doe'
+//        query.select(from).where(
+//                criteriaBuilder.equal(from.get("name"), "John Doe")
+//        );
+//        Query<Customer> customerQuery = session.createQuery(query);
+//        List<Customer> customerList = customerQuery.list();
+//        customerList.forEach(customer -> System.out.println(customer.toString()));
 
+        // select * from cutomer_table c left join orders o on c.id = o.cus_id where c.id='C001'
+        Session session = FactoryConfiguration.getInstance().getSession();
+        Query<Object[]> joinQuery = session.createQuery(
+                "from Customer c left join Order o on c.id = o.customer where c.id='C001'",
+                Object[].class
+        );
+        List<Object[]> objects = joinQuery.list();
+//        [
+//          [object(customer) -> 0 , object(order) -> 1],
+//          [object(customer),object(order)]
+//        ]
+        for (Object[] objectArray : objects) {
+            Customer customer = (Customer) objectArray[0];
+            Order order = (Order) objectArray[1];
+        }
     }
 }
