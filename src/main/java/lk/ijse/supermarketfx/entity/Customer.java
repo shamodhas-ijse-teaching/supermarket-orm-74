@@ -21,13 +21,14 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 @Setter
+@ToString
 @Entity
-@Table(name = "cutomers")
+@Table(name = "cutomer_table")
 public class Customer {
     @Id
     private String id;
 
-    @Column(nullable = false)
+    @Column(nullable = false,name = "customer_name")
     private String name;
 
     @Column(nullable = false, unique = true)

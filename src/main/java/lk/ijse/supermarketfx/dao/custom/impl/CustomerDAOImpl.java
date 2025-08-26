@@ -8,6 +8,7 @@ import lk.ijse.supermarketfx.entity.Customer;
 import lk.ijse.supermarketfx.util.CrudUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -49,47 +50,74 @@ public class CustomerDAOImpl implements CustomerDAO {
     @Override
     public List<Customer> getAll() throws SQLException {
         Session session = factoryConfiguration.getSession();
-
-        ResultSet resultSet = SQLUtil.execute("SELECT * FROM customer");
-
-        List<Customer> list = new ArrayList<>();
-        while (resultSet.next()) {
-            Customer customer = new Customer(
-                    resultSet.getString(1),
-                    resultSet.getString(2),
-                    resultSet.getString(3),
-                    resultSet.getString(4),
-                    resultSet.getString(5)
+        try {
+            Query<Customer> query = session.createQuery(
+                    "from Customer",
+                    Customer.class
             );
-            list.add(customer);
+            List<Customer> list = query.list();
+            return list;
+        } finally {
+            session.close();
         }
-        return list;
     }
 
     @Override // no need
     public String getLastId() throws SQLException {
-        ResultSet resultSet = SQLUtil.execute("SELECT customer_id FROM customer ORDER BY customer_id DESC LIMIT 1");
-        if (resultSet.next()) {
-            return resultSet.getString(1);
+        // SELECT customer_id FROM customer ORDER BY customer_id DESC
+        // LIMIT 1
+        Session session = factoryConfiguration.getSession();
+        try {
+            Query<String> query = session.createQuery(
+                    "SELECT c.id FROM Customer c ORDER BY c.id DESC",
+                    String.class
+            ).setMaxResults(1);
+            List<String> list = query.list();
+            if (list.isEmpty()) {
+                return null;
+            }
+            return list.get(0);
+        } finally {
+            session.close();
         }
-        return null;
     }
 
     @Override
     public boolean update(Customer customer) throws SQLException {
-        return SQLUtil.execute(
-                "UPDATE customer SET name = ?, nic = ?, email = ?, phone = ? WHERE customer_id = ?",
-                customer.getName(),
-                customer.getNic(),
-                customer.getEmail(),
-                customer.getPhone(),
-                customer.getId()
-        );
+        Session session = factoryConfiguration.getSession();
+        Transaction tx = session.beginTransaction();
+        try {
+            session.merge(customer);
+            tx.commit();
+            return true;
+        } catch (Exception e) {
+            if (tx != null) tx.rollback();
+            e.printStackTrace();
+            return false;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public boolean delete(String id) throws SQLException {
-        return SQLUtil.execute("DELETE FROM customer WHERE customer_id = ?", id);
+        Session session = factoryConfiguration.getSession();
+        Transaction tx = session.beginTransaction();
+        try {
+            Customer customer = session.get(Customer.class, id);
+            if (customer != null) {
+                session.remove(customer);
+                tx.commit();
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            if (tx != null) tx.rollback();
+            e.printStackTrace();
+            return false;
+        } finally {
+            session.close();
+        }
     }
 
     @Override // no need
@@ -104,39 +132,33 @@ public class CustomerDAOImpl implements CustomerDAO {
 
     @Override
     public Optional<Customer> findById(String id) throws SQLException {
-        ResultSet resultSet = SQLUtil.execute("SELECT * FROM customer WHERE customer_id = ?", id);
-        if (resultSet.next()) {
-            return Optional.of(new Customer(
-                    resultSet.getString(1),
-                    resultSet.getString(2),
-                    resultSet.getString(3),
-                    resultSet.getString(4),
-                    resultSet.getString(5)
-            ));
+        Session session = factoryConfiguration.getSession();
+        try {
+            Customer customer = session.get(Customer.class, 1);
+            return Optional.ofNullable(customer);
+        } finally {
+            session.close();
         }
-        return Optional.empty();
     }
+    // %ll%
+    // hello
 
     @Override // no need
     public List<Customer> search(String text) throws SQLException {
         String searchText = "%" + text + "%";
-        ResultSet resultSet = SQLUtil.execute(
-                "SELECT * FROM customer WHERE customer_id LIKE ? OR name LIKE ? OR nic LIKE ? OR email LIKE ? OR phone LIKE ?",
-                searchText, searchText, searchText, searchText, searchText
-        );
-
-        List<Customer> list = new ArrayList<>();
-        while (resultSet.next()) {
-            Customer customer = new Customer(
-                    resultSet.getString(1),
-                    resultSet.getString(2),
-                    resultSet.getString(3),
-                    resultSet.getString(4),
-                    resultSet.getString(5)
+        // SELECT * FROM customer WHERE customer_id LIKE ? OR name LIKE ? OR nic LIKE ? OR email LIKE ? OR phone LIKE ?
+        Session session = factoryConfiguration.getSession();
+        try {
+            Query<Customer> query = session.createQuery(
+                    "FROM Customer c WHERE c.id LIKE :text OR c.name LIKE :text OR c.nic LIKE :text OR c.email LIKE :text OR c.phone LIKE :text",
+                    Customer.class
             );
-            list.add(customer);
+            query.setParameter("text", searchText);
+            return query.list();
+        } finally {
+            session.close();
         }
-        return list;
+
     }
 
     @Override // no need

@@ -34,8 +34,8 @@ public class OrderDetailDAOImpl implements OrderDetailsDAO {
     public boolean save(OrderDetail orderDetail) throws SQLException {
         return SQLUtil.execute(
                 "insert into order_details values (?,?,?,?)",
-                orderDetail.getOrderId(),
-                orderDetail.getItemId(),
+//                orderDetail.getOrderId(),
+//                orderDetail.getItemId(),
                 orderDetail.getQuantity(),
                 orderDetail.getPrice()
         );

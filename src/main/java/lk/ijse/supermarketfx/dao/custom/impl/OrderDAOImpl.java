@@ -29,11 +29,11 @@ public class OrderDAOImpl implements OrderDAO {
 
         ResultSet rs = SQLUtil.execute("SELECT * FROM orders");
         while (rs.next()) {
-            list.add(new Order(
-                    rs.getString(1),
-                    rs.getString(2),
-                    rs.getDate(3)
-            ));
+//            list.add(new Order(
+//                    rs.getString(1),
+//                    rs.getString(2),
+//                    rs.getDate(3)
+//            ));
         }
 
         return list;
@@ -54,7 +54,7 @@ public class OrderDAOImpl implements OrderDAO {
     public boolean save(Order order) throws SQLException {
         return SQLUtil.execute("insert into orders values (?,?,?)",
                 order.getId(),
-                order.getCustomerId(),
+//                order.getCustomerId(),
                 order.getOrderDate()
         );
     }
