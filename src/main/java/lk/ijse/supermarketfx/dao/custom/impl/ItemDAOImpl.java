@@ -1,8 +1,10 @@
 package lk.ijse.supermarketfx.dao.custom.impl;
 
+import lk.ijse.supermarketfx.config.FactoryConfiguration;
 import lk.ijse.supermarketfx.dao.SQLUtil;
 import lk.ijse.supermarketfx.dao.custom.ItemDAO;
 import lk.ijse.supermarketfx.entity.Item;
+import org.hibernate.Session;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -37,6 +39,7 @@ public class ItemDAOImpl implements ItemDAO {
 
     @Override
     public boolean update(Item item) {
+        Session session = FactoryConfiguration.getInstance().getSession();
         return false;
     }
 
@@ -62,5 +65,17 @@ public class ItemDAOImpl implements ItemDAO {
                 qty,
                 id
         );
+    }
+
+    @Override
+    public boolean updateItemForPlaceOrder(Item item) {
+        Session currentSession = FactoryConfiguration.getInstance().getCurrentSession();
+        try {
+            currentSession.merge(item);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

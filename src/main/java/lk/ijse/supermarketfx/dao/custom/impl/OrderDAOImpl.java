@@ -1,9 +1,11 @@
 package lk.ijse.supermarketfx.dao.custom.impl;
 
+import lk.ijse.supermarketfx.config.FactoryConfiguration;
 import lk.ijse.supermarketfx.dao.SQLUtil;
 import lk.ijse.supermarketfx.dao.custom.OrderDAO;
 import lk.ijse.supermarketfx.entity.Order;
 import lk.ijse.supermarketfx.util.CrudUtil;
+import org.hibernate.Session;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -52,11 +54,14 @@ public class OrderDAOImpl implements OrderDAO {
 
     @Override
     public boolean save(Order order) throws SQLException {
-        return SQLUtil.execute("insert into orders values (?,?,?)",
-                order.getId(),
-//                order.getCustomerId(),
-                order.getOrderDate()
-        );
+        Session currentSession = FactoryConfiguration.getInstance().getCurrentSession();
+        try {
+            currentSession.persist(order);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
